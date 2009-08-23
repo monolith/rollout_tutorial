@@ -1,0 +1,135 @@
+h1. Setup Tutorial for a Rails application with Git / Github / Capistrano / Ruby Enterprise / Passenger
+
+We will be doing all of this from scratch.  I recommend you follow from scratch as well, unless you know what you're doing.
+
+h2. Prerequisites
+* Ruby installation on your local machine
+* Rails installation (LAMP)
+* Git installation
+* Capistrano installation
+* Github account
+* Clean server for production (with nothing but the initial OS setup)
+
+It will be also very helpful if you are already comfortable with basic Rails programming.  If not, then some of this may not make sense (but it should still work).
+
+h3. My set up
+
+NOTE: If you use a different setup, you may have slightly different commands.  There will not be many (if any) OS-specific commands used on my local machine (development), so it will be more useful to you to have match the production machine.  I have not tried this with Ubuntu 8.10 or 9.04 in production, but I imagine the differences will be minor.
+
+* Rails version: 2.2.2
+* OS: Ubuntu 8.10 (development), Ubuntu 8.04 (production)
+* Db: MySQL
+
+
+h2. Create a new Rails project
+
+Here I will create an initial Rails project on my local development machine, and ensure it works.  Of course, you can do this with any Rails project, but this is the one I will use for this tutorial.
+
+Create project:
+bq. rails rollout_tutorial
+
+Go to the rollout_toturial directory that was just created.
+bq. cd rollout_tutorial
+
+Let's see if this worked!
+bq. script/server
+
+Open your browswer and go to http://localhost:3000/
+If you see the "Welcome aboard" page, then good.  If not, check that your Rails installation is setup properly.
+
+Let's do some basic things.  For one, let's remove index.html
+bq. rm public/index.html
+
+And set up the database:
+bq. mysql -u root
+
+At the mysql prompt:
+bq. create database rollout_tutorial_development;
+
+Exit the database and let's update the project's database config file.  Open config/database.yml
+bq. development:
+      adapter: mysql
+      database: rollout_tutorial_development
+      username: root
+      password:
+      host: localhost
+
+NOTE: You may need to change the username and password.
+
+Now let's create a small application.  All this application will do is allow people to enter items into the database and see what has been entered.  I will use nifty_generators, see below Useful Links section for a link on how to install this if you do not have it.
+
+This will create the migration files, and controllers
+
+bq. script/generate nifty_scaffold thing title:string index new edit
+
+Now, run the migration (if this doesn't work, make sure that you set up config/database.yml correctly):
+bq. rake db:migrate
+
+Update config/routes.rb, and add the following line
+bq. map.connect '', :controller => 'things'
+
+And then this:
+bq. script/generate nifty_layout
+
+Finally, let's check that the web application works.  If your server is still up from last time, stop it, and and then:
+bq. script/server
+
+Open your browswer and go to http://localhost:3000/
+Now you should see your application and be able to add things (which will be saved to the database).
+
+Works?  Yay!  Time to move on to the fun stuff.
+
+
+h2. Git
+
+NOTE: Git is not the same thing as Github.  Github is service that will let you store your code on their servers (not run the code, just store it).
+
+Let's set up some version control with Git.  Install Git if you don't already have it installed (on Ubuntu 8.10, the command is sudo apt-get install git).  Check the Git link in the Useful Links section for more on Git and installation.
+
+Now, let's initiate version control for our project.
+
+bq. git init
+
+You should now see .git (hidden) directory in your project.
+
+Before we go on, let's tell git to ignore tracking certain files.  We want to do this because we don't want to track temporry files (ending with ~ on Ubuntu), log files, and some sensitive files, such as those in the config directory.  Up to you what files and directories to ignore, this example just shows the capability.  Read up more on Git to learn how to use it better.  If you're hosting your code on Github (for free), others will be able to see your files, which is why you will want to ignore some senstive files.
+
+Create a .gitignore file in the project root.
+In the file, specify what should be ignored, here is what I used:
+bq. *.log
+db/schema.rb
+db/schema.sql
+db/sphinx/*
+*~
+tmp/*
+config/*
+
+Now, let's add all file first version of the project (you need the "." there)
+bq. git add .
+
+
+
+h2. Useful Links
+
+h3. Nifty generators
+
+http://github.com/ryanb/nifty-generators/tree/master
+
+h3. Git
+
+http://git-scm.com/
+
+h3. Github
+(you're here!)
+
+h3. Capistrano
+
+h3. Ruby Enterprise
+http://www.rubyenterpriseedition.com/
+
+h3. Passenger
+
+
+
+http://www.softiesonrails.com/2007/4/5/the-absolute-moron-s-guide-to-capistrano
+
