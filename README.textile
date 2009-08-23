@@ -107,13 +107,13 @@ Before we go on, let's tell git to ignore tracking certain files.  We want to do
 Create a .gitignore file in the project root.
 In the file, specify what should be ignored, here is what I used:
 
-bq. *.log
+bq. \*.log
 db/schema.rb
 db/schema.sql
-db/sphinx/*
-*~
-tmp/*
-config/*
+db/sphinx/\*
+\*~
+tmp/\*
+config/\*
 
 Now, let's add all file first version of the project (you need the "." there)
 
