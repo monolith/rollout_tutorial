@@ -107,7 +107,7 @@ Before we go on, let's tell git to ignore tracking certain files.  We want to do
 Create a .gitignore file in the project root.
 In the file, specify what should be ignored, here is what I used:
 
-bq. pre. *.log
+pre. *.log
 db/schema.rb
 db/schema.sql
 db/sphinx/*
