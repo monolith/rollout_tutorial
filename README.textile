@@ -198,6 +198,21 @@ Let's make an update to one of your files.  On your local machine, open the READ
 
 bq. Hello world
 
+Save the file.
+
+You will need to learn how to use Git to learn how to use version control, add and remove files, etc.  But that is not the purpose of this tutorial.  So, since we just updated the README file, let's make sure we can send that change to Github.  Here's how to do that.
+
+While we saved the README file, we did not add it to our latest version with Git.  You would use this command regardless of Github.  This is simply to commit the changes you made to the latest in your local repository.
+
+bq. git commit -a -m "Updated README"
+
+Finally, let's push these changes to Github:
+
+bq. git push origin master
+
+In your browser, go back to your project (or refresh).  You should see the files, and you should also see that the README file was just updated, with a commit comment we added above "Updated README" ... click on the file in your browser.  You should see your changes there!
+
+Worked?  Then, this part is done.
 
 
 h2. Useful Links
