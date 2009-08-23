@@ -26,27 +26,34 @@ h2. Create a new Rails project
 Here I will create an initial Rails project on my local development machine, and ensure it works.  Of course, you can do this with any Rails project, but this is the one I will use for this tutorial.
 
 Create project:
+
 bq. rails rollout_tutorial
 
 Go to the rollout_toturial directory that was just created.
+
 bq. cd rollout_tutorial
 
 Let's see if this worked!
+
 bq. script/server
 
 Open your browswer and go to http://localhost:3000/
 If you see the "Welcome aboard" page, then good.  If not, check that your Rails installation is setup properly.
 
 Let's do some basic things.  For one, let's remove index.html
+
 bq. rm public/index.html
 
 And set up the database:
+
 bq. mysql -u root
 
 At the mysql prompt:
+
 bq. create database rollout_tutorial_development;
 
 Exit the database and let's update the project's database config file.  Open config/database.yml
+
 bq. development:
       adapter: mysql
       database: rollout_tutorial_development
@@ -66,12 +73,15 @@ Now, run the migration (if this doesn't work, make sure that you set up config/d
 bq. rake db:migrate
 
 Update config/routes.rb, and add the following line
+
 bq. map.connect '', :controller => 'things'
 
 And then this:
+
 bq. script/generate nifty_layout
 
 Finally, let's check that the web application works.  If your server is still up from last time, stop it, and and then:
+
 bq. script/server
 
 Open your browswer and go to http://localhost:3000/
@@ -96,6 +106,7 @@ Before we go on, let's tell git to ignore tracking certain files.  We want to do
 
 Create a .gitignore file in the project root.
 In the file, specify what should be ignored, here is what I used:
+
 bq. *.log
 db/schema.rb
 db/schema.sql
@@ -105,7 +116,87 @@ tmp/*
 config/*
 
 Now, let's add all file first version of the project (you need the "." there)
+
 bq. git add .
+
+If you want to see what is scheduled for versioning, do this:
+
+bq. git status
+
+Time to commit (save) this.
+
+bq. git commit -m "First commit"
+
+Done!
+
+
+h2. Github
+
+OK, so we already have version control with Git locally on our local computer.  Which, for most people may be good enough.  But, let's do more, and host our code repository on Github.
+
+Create a Github account.  Done?
+
+h3. Github account settings
+
+Once your account is set up, you need to take a few steps in order to use it.
+
+* Click on profile, and save your name.  You will need to have git set up with the same name locally (we will do this shortly).
+* Click on account and ensure the email address you used here is the same one you will want to use with git locally (will do this shortly as well).
+
+We need to add an SSH key.  Assuming you have not done this yet, here are the steps.
+On your local machine (you may need to install SSH first):
+
+bq. ssh-keygen
+
+Follow the steps (for this example you can just hit enter and accept all default values).
+
+To see if it worked, do this:
+
+bq. cat id_rsa.pub
+
+That should show you the public SSH key.  Copy this, and go to your Github account.
+
+* Add this key as your public SSH key (see account page).
+
+
+h3. Creating a Github repository
+
+* Click on dashboard
+* Click on create a new one
+* Name your project the same name as our Rails project "rollout_tutorial"
+* Click on create repository
+
+You should now see a setup page.  Most of these things we can ignore.
+
+Here is what you need for now:
+
+bq. git config --global user.name "name"
+    git config --global user.email email
+    
+When this will do is set your git global name and email (on your local machine).  Make sure these are the name and emails you want to use, and copy and paste in your local terminal.
+
+After, you've done that, let's check that we can connect to Github via SSH.
+
+bq. ssh git@github.com
+
+If successful, you will see a message telling you that you have been authenticated.  If not, go back an make sure you have set up the Github account settings as described above.
+
+Works?  Let's move on.
+
+We have already create a rails application and used git to save it.  So all we need to do now are the following lines (replace my username with yours in the first line):
+
+bq. git remote add origin git@github.com:monolith/rollout_tutorial.git
+    git push origin master
+    
+Go back to the Github project page and click on Continue (or refresh on your project).
+
+You should now see the code there!  And some details on when you last saved the changes.
+
+h3. Just to be sure...
+
+Let's make an update to one of your files.  On your local machine, open the README file in the rollout_tutorial directory, and change it.  For example, at the following line at the top:
+
+bq. Hello world
 
 
 
