@@ -196,7 +196,7 @@ h3. Just to be sure...
 
 Let's make an update to one of your files.  On your local machine, open the README file in the rollout_tutorial directory, and change it.  For example, at the following line at the top:
 
-bq. Hello world
+pre. Hello world
 
 Save the file.
 
@@ -215,15 +215,208 @@ In your browser, go back to your project (or refresh).  You should see the files
 Worked?  Then, this part is done.
 
 
+h2. Production server
+
+I am doing the following on a fresh install of Ubuntu 8.04 LTS, I am using a VPS hosted on Linode.com
+
+h3. General setup
+
+Log into the server:
+
+bq. ssh root@domain_or_ip_of_your_server
+
+Say "yes" add add this domain/server to your known hosts (you won't have to do this again).  Enter your password, and you should be in your server.
+
+Update the OS (for security reasons)
+
+bq. apt-get update
+
+You may want to change the hostname (don't have to).  Replace "myservername" with whatever you like.
+
+bq. hostname myservername
+
+If you exit and reconnect, you will see root@myservername... this will help remind you which server you are working on while looking at the terminal.
+
+h3. Ruby Enterprise
+
+OK, let's install Ruby Enterprise.  This is a fork of the Ruby language that will run your code faster (the claim is 33% faster on average).  Since, this is indeed Ruby, we don't need to install the standard Ruby library.
+
+Enterprise will install a bunch of things for you, this is why were are doing this now.
+
+Download Ruby Enterprise (see their website, link below).  In this exmaple, I am using the current version as of August 23, 2009.  You may see a different version, and need to modify the below as needed.
+
+I will do the download with wget.  So first, let's install wget.
+
+bq. apt-get install wget
+
+Now download REE and install it.
+
+bq. wget http://rubyforge.org/frs/download.php/58677/ruby-enterprise-1.8.6-20090610.tar.gz
+
+Extract it, and remove the original download (unless you want to keep it):
+
+bq. tar xzvf ruby-enterprise-1.8.6-20090610.tar.gz
+rm ruby-enterprise-1.8.6-20090610.tar.gz
+
+Run the installation:
+
+bq. ruby-enterprise-1.8.6-20090610/installer
+
+The installation will take you through some steps, follow them.  The first time you try this, it will likely not work, but it will tell you what you need to do.  Here is what you will likely need to do (unless these were already installed on your server):
+
+bq. apt-get install build-essential
+apt-get install build-essential
+apt-get install zlib1g-dev
+apt-get install libssl-dev
+apt-get install libreadline5-dev
+
+If you get the message telling you install these things (or others), do it.  And then, do this again:
+
+bq. ruby-enterprise-1.8.6-20090610/installer
+
+* Just go with all the defaults, unless you have a good reason for using something else.
+
+When done, the installer will prompt you with a command to install some database gems.  I am using MySQL, so will only install that one.  You will also be told how to install Passenger, and this we will also do.
+
+
+h4. MySQL
+
+bq. /opt/ruby-enterprise-1.8.6-20090610/bin/ruby /opt/ruby-enterprise-1.8.6-20090610/bin/gem install mysql
+
+
+h3. Passenger (and Apache)
+
+bq. /opt/ruby-enterprise-1.8.6-20090610/bin/passenger-install-apache2-module
+
+Once again, the installation will likely ask you to install some additional things.  This is what I get, and will install each as requested:
+
+h4. Apache and additional needed items
+
+(This is what Passenger installer asked for.. you may get something different, so pay attention)
+
+bq. apt-get install apache2-mpm-prefork
+apt-get install apache2-prefork-dev
+apt-get install libapr1-dev
+apt-get install libaprutil1-dev
+
+And once more, let's try Passenger installer:
+
+bq. /opt/ruby-enterprise-1.8.6-20090610/bin/passenger-install-apache2-module
+
+Now, it should have worked.  And Passenger will ask you to add the following to the Apache configuration file:
+
+bq. LoadModule passenger_module /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gems/1.8/gems/passenger-2.2.4/ext/apache2/mod_passenger.so
+PassengerRoot /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gems/1.8/gems/passenger-2.2.4
+PassengerRuby /opt/ruby-enterprise-1.8.6-20090610/bin/ruby
+
+
+Before, we do that - let's make ourselves happy and make sure our webserver is up and running!  Go into your browser and enter your IP or domain name (unless you have done some DNS set up already - not in scope of this tutorial - then just use the IP).
+
+You should see "It works!" in the browser.  If you do not see this, then something went wrong.  Go back and check that you have followed this section correctly.  You may need to consult your host's guide.
+
+Let's move on.  We need to add those lines to the Appache config file.  So, let's do that. The configuration file should be here: /etc/apache2/apache2.conf.  Open this file (I will use nano as the editor, you can use whatever you like):
+
+bq. nano /etc/apache2/apache2.conf
+
+Copy and paste these lines to the top of the file, save it, and close.
+
+pre. LoadModule passenger_module /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gems/1.8/gems/passenger-2.2.4/ext/apache2/mod_passenger.so
+PassengerRoot /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gems/1.8/gems/passenger-2.2.4
+PassengerRuby /opt/ruby-enterprise-1.8.6-20090610/bin/ruby
+
+h3. "gem"
+
+What gems do I have?  If you try "gem list" you will see a command not found.  This is because we didn't install the regular gem package, because we didn't install standard Ruby (we installed Ruby Enterprise fork, remember?)
+
+So, if you do this:
+NOTE: Your REE version may be different - make sure you use the right directory, so you may need to modify the below line.
+
+bq. /opt/ruby-enterprise-1.8.6-20090610/bin/gem list
+
+You should see the list of installed gems.  Remembering/typing this entire line is not fun.  So let's create a symlink.  Here, the symlink will use "gem" (the last thing in the below line) to refer to the location of the gem.  If you already had Ruby and gems installed, you may want to use a different name (i.e. "reegem").
+NOTE: Your REE version may be different - make sure you use the right directory, so you may need to modify the below line.
+
+bq. ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/gem /usr/bin/gem
+
+Now, if you do:
+
+bq. gem list
+
+You should see all the gems installed, and can use it just like a regular gem command, just remember that gems will be installed in the REE folder.  So, since I am using Rails 2.2.2 in this tutorial, let's install that gem:
+
+bq. gem install rails --version=2.2.2
+
+
+h3. MySQL
+
+We installed MySQL gem above, but we still need to install MySQL itself.
+
+bq. apt-get install mysql-server
+
+h4. Create Database
+
+Once the installation is complete, let's log into mysql and create the database we need for our application.
+
+bq. mysql -u root -p
+CREATE DATABASE rollout_tutorial_production;
+
+h4. Create MySQL user
+
+Since it's a good idea not to use the root user for our application, let's create another user.
+
+bq. CREATE USER 'tutorial_db_user'@localhost IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON rollout_tutorial_production.* TO 'tutorial_db_user';
+exit
+
+Feel free to make sure the user was created:
+
+bq. mysql -u tutorial_db_user -p
+
+h4. Update the application configuration
+
+Now that we have done this, let's go back to our config/database.yml file and update the production configuration there:
+
+bq. production:
+      adapter: mysql
+      database: rollout_tutorial_production
+      username: tutorial_db_user
+      password: password
+      host: YOUR SERVER DOMAIN OR IP ADDRESS HERE
+
+
+Our server is ready (for now)!
+
+
+h2. Capistrano
+
+OK, at this point this is what we have done:
+
+* Created a Rails project on our local machine
+* Created a git repository on our local machine
+* Set up Github to host or remote repository
+* Set up our production server
+
+The next thing we need to do is set up capistrano, to automate our application rollout to production.
+
+h3. Create deploy user on the server
+
+
+h3. Capistano setup
+
+h3. Recipe
+
+h3. Git and Github
+
+
 h2. Useful Links
 
 h3. Nifty generators
 
-http://github.com/ryanb/nifty-generators/tree/master
+"http://github.com/ryanb/nifty-generators/tree/master":http://github.com/ryanb/nifty-generators/tree/master
 
 h3. Git
 
-http://git-scm.com/
+"http://git-scm.com/":http://git-scm.com/
 
 h3. Github
 (you're here!)
@@ -231,7 +424,7 @@ h3. Github
 h3. Capistrano
 
 h3. Ruby Enterprise
-http://www.rubyenterpriseedition.com/
+"http://www.rubyenterpriseedition.com/":http://www.rubyenterpriseedition.com/
 
 h3. Passenger
 
