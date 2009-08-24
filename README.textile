@@ -438,10 +438,6 @@ bq. chown deploy /var/www/apps
 
 OK, so now, the deploy user is set.
 
-h3. Installation
-
-On your local machine (you don't need to install anything on the production server):
-
 h3. Git and Github
 
 Since we're using git, let's make sure our server knows git.  As root on the production server:
@@ -481,12 +477,15 @@ bq. ssh git@github.com
 
 Type "yes" when prompted.  Now you should see a message saying you have been successfully authenticated.  Great! 
 
+h3. Capistrano Installation
 
-h3. Capistrano Setup
-
-OK - finally, with that leg work done, it's time to set up Capistrano itself.  This is set up on your local machine only.
+OK - finally, with that leg work done, it's time to set up Capistrano itself.  On your local machine (you don't need to install anything on the production server):
 
 From your tutorial project....
+
+TBD
+
+h3. Capistrano Setup
 
 TBD
 
