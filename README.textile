@@ -1,16 +1,21 @@
 h1. Setup Tutorial for a Rails application with Git / Github / Capistrano / Ruby Enterprise / Passenger
 
-We will be doing all of this from scratch.  I recommend you follow from scratch as well, unless you know what you're doing.
+This tutorial will show you how to rollout a basic Rails application using Git and Capistrano.  We will do this while leveraging Github, and - on the production server - Ruby Enterprise Edition and Passenger.  The database will be MySQL.  We will also be using Ubuntu as the OS.
+
+We will be doing all of this from scratch.  I recommend you follow from scratch as well, unless you know what you're doing (in which case, jump in whereever you like).
+
+NOTE: This tutorial will NOT intended to teach you Rails, Git, Capistrano, etc.  While we will cover everything, we touch on these things at a high level - with just enough information to get you to set everything up and get you going.  However, you will benefit greatly by looking at each one of these things in more detail.  Links at the bottom will help you get started on learning the details.
+
 
 h2. Prerequisites
+
 * Ruby installation on your local machine
-* Rails installation (LAMP)
-* Git installation
-* Capistrano installation
-* Github account
+* Rails installation (LAMP) on your local machine
+* MySQL installation on your local machine
 * Clean server for production (with nothing but the initial OS setup)
 
-It will be also very helpful if you are already comfortable with basic Rails programming.  If not, then some of this may not make sense (but it should still work).
+It will be helpful if you are already comfortable with basic Rails programming.  If not, then some of this may not make sense (but it should still work).
+
 
 h3. My set up
 
@@ -152,7 +157,7 @@ Follow the steps (for this example you can just hit enter and accept all default
 
 To see if it worked, do this:
 
-bq. cat id_rsa.pub
+bq. cat ~/.ssh/id_rsa.pub
 
 That should show you the public SSH key.  Copy this, and go to your Github account.
 
@@ -237,7 +242,7 @@ bq. hostname myservername
 
 If you exit and reconnect, you will see root@myservername... this will help remind you which server you are working on while looking at the terminal.
 
-h3. Ruby Enterprise
+h3. Ruby Enterprise Edition
 
 OK, let's install Ruby Enterprise.  This is a fork of the Ruby language that will run your code faster (the claim is 33% faster on average).  Since, this is indeed Ruby, we don't need to install the standard Ruby library.
 
@@ -400,35 +405,135 @@ The next thing we need to do is set up capistrano, to automate our application r
 
 h3. Create deploy user on the server
 
+Capistrano will log into our production server.  Best practice calls for a deployment user, will call the user "deploy" and then set up Capistrano to log in as that user.
 
-h3. Capistano setup
+SSH into the server as root (you may already be logged in), and then do this:
 
-h3. Recipe
+bq. adduser deploy
+
+Fill out all the relevant details.
+
+Let's see if that worked.  Exit from the production server.  And let's re-logon with the deploy user.
+
+bq. ssh deploy@domain_or_ip_of_your_server
+
+For now, exit, and log back on with root
+
+bq. ssh root@domain_or_ip_of_your_server
+
+We will follow convention when install our application, which means we will install it to /var/www/apps/
+
+You server should already have /var/www/
+So let's go there:
+
+bq. cd /var/www/
+
+Let's create the apps folder (remember, we're logged on as root at the moment):
+
+bq. mkdir apps
+
+The deploy user does not have permissions for this directory, so let's set those (note that we need to use sudo here):
+
+bq. chown deploy /var/www/apps
+
+OK, so now, the deploy user is set.
+
+h3. Installation
+
+On your local machine (you don't need to install anything on the production server):
 
 h3. Git and Github
+
+Since we're using git, let's make sure our server knows git.  As root on the production server:
+
+bq. apt-get install git
+apt-get install git-core
+
+Let's set some global settings.  We can set these to be same as what you did on your local machine for setting up Github.  These should be same as what you have set up in your Github account.
+
+bq. git config --global user.name "name"
+    git config --global user.email email
+    
+
+OK, one more thing to do before moving on to Capistrano itself.  Capistrano will need to get into Github from our production server, because that is where our main git repository is stored.  We need to do a couple of things to set this up - mainly setting up SSH keys.  We can copy the key from our local machine, but let's keep those separate and just generate a new key to identify the deploy user.
+
+NOTE: if ssh does not work, you need to install it with: apt-get install ssh
+
+Log in as deploy user:
+
+bq. ssh deploy@domain_or_ip_of_your_server
+
+Create the ssh key, use all default (hit enter, do not select passphrase here as that will complicate things):
+
+bq. ssh-keygen
+
+Copy the key, and add it to you Github account.  The generated key can be found like so:
+
+cat ~/.ssh/id_rsa.pub
+
+Copy that, the go to your Github account.  Ckick on account, and then click on add another key (under SSH public keys), and add the key.
+
+Let's see if that worked.
+
+We actually need to do this step whether you like it or not because we need to add Github as a known host on our server.  So, type this (as the deploy user on the production server):
+
+bq. ssh git@github.com
+
+Type "yes" when prompted.  Now you should see a message saying you have been successfully authenticated.  Great! 
+
+
+h3. Capistrano Setup
+
+OK - finally, with that leg work done, it's time to set up Capistrano itself.  This is set up on your local machine only.
+
+From your tutorial project....
+
+TBD
+
+h3. Deployment Recipe
+
+TBD
 
 
 h2. Useful Links
 
-h3. Nifty generators
-
-"http://github.com/ryanb/nifty-generators/tree/master":http://github.com/ryanb/nifty-generators/tree/master
-
 h3. Git
-
 "http://git-scm.com/":http://git-scm.com/
+"http://www-cs-students.stanford.edu/~blynn/gitmagic/":http://www-cs-students.stanford.edu/~blynn/gitmagic/
 
 h3. Github
+
 (you're here!)
+Check out the Guides section
+
 
 h3. Capistrano
 
+"http://www.capify.org":http://www.capify.org
+"The Absolute Moron's Guide to Capistrano":http://www.softiesonrails.com/2007/4/5/the-absolute-moron-s-guide-to-capistrano
+
+
 h3. Ruby Enterprise
+
 "http://www.rubyenterpriseedition.com/":http://www.rubyenterpriseedition.com/
+"Adding Ruby Enterprise Edition to multiruby versions":http://www.simonecarletti.com/blog/2009/06/adding-ruby-enterprise-edition-to-multiruby-versions/
+
 
 h3. Passenger
 
+"http://www.modrails.com/":http://www.modrails.com/
 
 
-http://www.softiesonrails.com/2007/4/5/the-absolute-moron-s-guide-to-capistrano
+h3. Screencasts
+
+"Scott Chacon Rails with Git/Capistrano - focus on Git":http://www.vimeo.com/369095
+"Railscasts - Git on Rails":http://railscasts.com/episodes/96-git-on-rails
+"Railscasts - Capistrano Tasks":http://railscasts.com/episodes/133-capistrano-tasks
+"(not free, but good) Peepcode - one screencast on Git, one on Capistrano":http://peepcode.com/
+
+h3. Other useful links
+
+h4. Nifty generators (used in the tutorial app)
+
+"http://github.com/ryanb/nifty-generators/tree/master":http://github.com/ryanb/nifty-generators/tree/master
 
