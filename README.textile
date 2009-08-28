@@ -401,7 +401,6 @@ bq. production:
       database: rollout_tutorial_production
       username: tutorial_db_user
       password: password
-      host: YOUR SERVER DOMAIN OR IP ADDRESS HERE
 
 
 Our server is ready (for now)!
@@ -539,6 +538,7 @@ Plus some other things.  Change the file so that it looks like this:
 pre.. 
 
 
+
 #############################################################
 #	APPLICATION DETAILS #######################################
 
@@ -547,7 +547,7 @@ set :application, "rollout_tutorial" # this will be used to create the folder st
 set :deploy_to, "/var/www/apps/#{application}"
 
 # Since this will rollout our code to the production server, state so explicitely:
-set :rails_env, "production"
+#set :rails_env, "production"
 
 #############################################################
 #	GETTING INTO THE PRODUCTION SERVER ########################
@@ -609,34 +609,43 @@ namespace :deploy do
   
   desc "Sync the config directory"
   task :sync_config do
-    # this will sync the config file on your local machine with that on your production server
+    # this will sync files on your local machine with that on your production server
+    # we need this for the files that we told git to ignore
+    
     # notice that the domain variable is used (this should be the ip or domain of your app)
     # we set this variable way on top
-    # also note that this puts it in the shared folder, the symlink task below will like it from the release folder
+    # also note that this is going to the shared folder, the symlink task below will link these from the release folder
     
     # make sure you install rsync on the server
-    system "rsync -vr --exclude='*~' config #{user}@#{domain}:#{shared_path}/"
+    system "rsync -vr --exclude='*~' config #{user}@#{domain}:#{release_path}/"
 
     # we'll need the tmp file to restart Passenger (see below)
     system "rsync -vr --exclude='*~' tmp #{user}@#{domain}:#{shared_path}/"
 
+    # and also let's sync the db folder - notice this goes in the current folder
+    system "rsync -vr --exclude='*~' db #{user}@#{domain}:#{release_path}/"
+
   end
 
-  desc "Symlink shared config folder on each release."
-  task :symlink_shared do
-    # creates symlink for the config folder
-    run "ln -nfs #{shared_path}/config #{release_path}/config"
-  end
   
   desc "Tell Passenger to restart the app."
   task :restart do
     run "touch #{shared_path}/tmp/restart.txt"
   end
 
+  # Note that the default deploy:start task looks for a script/spin script  
+  # to run. If you are using a deployment method that doesn't need script/ 
+  # spin, then you'll need to override deploy:start
+  # http://www.mail-archive.com/capistrano@googlegroups.com/msg04819.html
+  deploy.task :start do
+     # nothing
+   end
+
+
 end
 
- after 'deploy:update_code', 'deploy:sync_config', 'deploy:symlink_shared', 'deploy:restart'
-
+ after 'deploy:update_code', 'deploy:sync_config', 'deploy:restart'
+ 
 
 pre.
 
@@ -707,9 +716,47 @@ Here are the additional steps I needed to do to get it all working:
 
 * In config/environments/production.rb, comment out: config.action_view.cache_template_loading = true
 * You may be missing gems on the production server.  To fix that, either install them or freeze them in your project.  The recommended solution is to freeze them (on your local machine, inside your project do this: freeze gems.  This will freeze them into your vendor directory).
+* If you initially created with a rails version > 2.2.2, and you then changed it to 2.2.2 in the environment settings, then you need to rename application_controller.rb to application.rb (and then make sure it's included in the git repository).
+* Look over the deployment recipe above, you may need to modify it.
 
 
-To be continued.....
+h4. Virtual Host
+
+OK, once everything deployed with no errors, let's check out the website.  Go to your domain in the browser.
+
+What you should see (if you followed the tutorial) is "It works!"  There is a reason that's there, and not our application.  We need to modify the Virtual Host settings on the server.  Log into your production server:
+
+bq. ssh root@domain_or_ip_of_your_server
+
+Let's look at the configuration file.
+
+bq. nano /etc/apache2/sites-available/default
+
+There is a lot more to this that you should really learn.  But, for purposes of this tutorial, let's do something quick and easy.
+
+Modify the file so that it only has the following:
+
+pre..
+
+NameVirtualHost *
+
+<VirtualHost *>
+        DocumentRoot /var/www/apps/rollout_tutorial/current/public
+        ErrorLog /var/log/apache2/error.log
+</VirtualHost>
+
+pre.
+
+Note that the DocumentRoot is now pointing to you application/current/public direcory.
+
+After saving this, we need to restart Appache:
+
+bq. apache2ctl restart
+
+Now go back to the browser and refresh.
+
+The application should now be there and work.  Congradulations, you made it!
+
 
 h2. Useful Links
 
