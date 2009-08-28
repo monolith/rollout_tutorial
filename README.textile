@@ -706,6 +706,8 @@ Still getting errors?  This is where it get's tricky.  You may need to google th
 Here are the additional steps I needed to do to get it all working:
 
 * In config/environments/production.rb, comment out: config.action_view.cache_template_loading = true
+* You may be missing gems on the production server.  To fix that, either install them or freeze them in your project.  The recommended solution is to freeze them (on your local machine, inside your project do this: freeze gems.  This will freeze them into your vendor directory).
+
 
 To be continued.....
 
