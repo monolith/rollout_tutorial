@@ -24,6 +24,9 @@ NOTE: If you use a different setup, you may have slightly different commands.  T
 * Rails version: 2.2.2
 * OS: Ubuntu 8.10 (development), Ubuntu 8.04 (production)
 * Db: MySQL
+* Capistrano v2.5.8
+* Git version 1.5.6.3
+
 
 
 h2. Create a new Rails project
@@ -75,6 +78,7 @@ This will create the migration files, and controllers
 bq. script/generate nifty_scaffold thing title:string index new edit
 
 Now, run the migration (if this doesn't work, make sure that you set up config/database.yml correctly):
+
 bq. rake db:migrate
 
 Update config/routes.rb, and add the following line
@@ -242,6 +246,17 @@ bq. hostname myservername
 
 If you exit and reconnect, you will see root@myservername... this will help remind you which server you are working on while looking at the terminal.
 
+h3. Install MySQL
+
+This may seem a little early, but we need to do this before installing Ruby Enterprise.  Otherwise, you may run into a problem installing mysql gem.
+
+bq. apt-get install mysql-server
+
+We need this to avoid a problem with installing mysql gem later.
+
+bq. apt-get install libmysql++-dev
+
+
 h3. Ruby Enterprise Edition
 
 OK, let's install Ruby Enterprise.  This is a fork of the Ruby language that will run your code faster (the claim is 33% faster on average).  Since, this is indeed Ruby, we don't need to install the standard Ruby library.
@@ -270,7 +285,6 @@ bq. ruby-enterprise-1.8.6-20090610/installer
 The installation will take you through some steps, follow them.  The first time you try this, it will likely not work, but it will tell you what you need to do.  Here is what you will likely need to do (unless these were already installed on your server):
 
 bq. apt-get install build-essential
-apt-get install build-essential
 apt-get install zlib1g-dev
 apt-get install libssl-dev
 apt-get install libreadline5-dev
@@ -283,10 +297,10 @@ bq. ruby-enterprise-1.8.6-20090610/installer
 
 When done, the installer will prompt you with a command to install some database gems.  I am using MySQL, so will only install that one.  You will also be told how to install Passenger, and this we will also do.
 
-
-h4. MySQL
+h4. MySQL gem
 
 bq. /opt/ruby-enterprise-1.8.6-20090610/bin/ruby /opt/ruby-enterprise-1.8.6-20090610/bin/gem install mysql
+
 
 
 h3. Passenger (and Apache)
@@ -352,15 +366,9 @@ You should see all the gems installed, and can use it just like a regular gem co
 bq. gem install rails --version=2.2.2
 
 
-h3. MySQL
+h3. Create the database
 
-We installed MySQL gem above, but we still need to install MySQL itself.
-
-bq. apt-get install mysql-server
-
-h4. Create Database
-
-Once the installation is complete, let's log into mysql and create the database we need for our application.
+Let's log into mysql and create the database we need for our application.
 
 bq. mysql -u root -p
 CREATE DATABASE rollout_tutorial_production;
@@ -388,6 +396,13 @@ bq. production:
       password: password
       host: YOUR SERVER DOMAIN OR IP ADDRESS HERE
 
+
+h3. rsync
+
+We will make use of rsync with Capistrano (don't HAVE TO, but will).  So let's install that while here.
+(if you don't have this on your local machine, install it there too).
+
+bq. apt-get install rsync
 
 Our server is ready (for now)!
 
@@ -477,17 +492,201 @@ bq. ssh git@github.com
 
 Type "yes" when prompted.  Now you should see a message saying you have been successfully authenticated.  Great! 
 
+For security reason, let's make sure no one else can edit the .ssh directory.  Do this on the production server:
+
+bq. chmod 700 .ssh
+
+
+h3. Use SSH key to log into your production server
+
+It will be helpful, for you, and Capistrano, to be able to log into your production server without retyping your password every time.  We can solve this by telling the production server your public SSH key on your local machine.  Since we already created the key (for use with Github), we can just copy that to our production server.  We can do that with one command.
+
+From your local machine, do this:
+
+bq. cat ~/.ssh/id_rsa.pub | ssh deploy@domain_or_ip_of_your_server "cat >> ~/.ssh/authorized_keys"
+
+Now, you won't have to type your password everytime you log into your production server.  To check, try this:
+
+bq. ssh deploy@domain_or_ip_of_your_server
+
+
 h3. Capistrano Installation
 
-OK - finally, with that leg work done, it's time to set up Capistrano itself.  On your local machine (you don't need to install anything on the production server):
+OK - finally, with all that leg work done, it's time to set up Capistrano itself.  On your local machine (you don't need to install anything on the production server):
 
-From your tutorial project....
+On your local machine, install capistrano:
 
-TBD
+bq. sudo gem install capistrano
+
+There is nothing to install on the production server.  So, let's move on.
 
 h3. Capistrano Setup
+  
+Let's enable Capistrano.  On your local machine, while in your project do this (including the ".")
 
-TBD
+bq. capify .
+
+All this really does is create a deploy.rb file in the project's config directoy.  This will contain the deployment instructions that Capistrano will follow when rolling out your code.
+
+So, let's take a look at it.  Open config/deploy.rb.  You should see something like the following:
+
+pre. set :application, "set your application name here"
+set :repository,  "set your repository location here"
+role :web, "your web-server here"
+
+Plus some other things.  Change the file so that it looks like this:
+
+pre.. 
+
+
+#############################################################
+#	APPLICATION DETAILS #######################################
+
+# name of the application
+set :application, "rollout_tutorial" # this will be used to create the folder structure (see line)
+set :deploy_to, "/var/www/apps/#{application}"
+
+# Since this will rollout our code to the production server, state so explicitely:
+set :rails_env, "production"
+
+#############################################################
+#	GETTING INTO THE PRODUCTION SERVER ########################
+
+# username of the user underwhich capistrano will log in,
+# in this case, this is the deploy user we created earlier
+set :user, "deploy"
+
+# the deploy user has all the required permissions, so sudo is not needed
+set :use_sudo, false
+
+# you may, or may not need to use this - but let's use it just in case
+ssh_options[:paranoid] = false 
+
+# address of the production server, not that this is a variable
+set :domain, "IP or domain name of production server"
+
+# the above variable is used here.
+# however, you can write these out - and may need to if you set up your environment
+# in a way that puts these things on different servers
+# however, in our exaple, everything is on the same server, so using the variable makes sense
+role :app, domain
+role :web, domain
+role :db, domain, :primary => true
+
+#############################################################
+#	GIT AND GITHUB ############################################
+
+# tell Capistrano that our version control is done with Git
+set :scm, :git
+
+# address of our Git repository, which happens to be on Github
+# NOTE: the format of this is git@github.com:your_user_name/git_repository_name.git 
+set :repository,  "git@github.com:monolith/rollout_tutorial.git"
+
+# don't forget to change the above user name to yours!
+
+# in Git, you can have many branches.  To stay consistent with the defaults (and out example), we are using master
+set :branch, "master"
+
+# this command means that only the changes will be updated (not entire code base)
+set :deploy_via, :remote_cache
+
+# where is the git command on the server?  stating it just in case
+set :scm_command, "/usr/bin/git"
+
+
+#############################################################
+# TASKS #####################################################
+
+# there are some things we'll want to do after the basic deployment has completed
+# do do those things, we will create the tasks, and then call them in the end
+
+# until this point, all the code that has been deployed, matches what you have in the (Github) repository
+# since we excluded the config directory from our Git versioning (in order to not display or details publically on Github)
+# we need to copy the files over to the production server
+
+#	Here is a task that will copy this over fromt he local machine to the production server
+task :update_config, :roles => [:app] do
+  run "cp -Rf #{shared_path}/config* #{release_path}/config"
+end
+
+#	Since we are dealing with Passenger, we need to restart it after everything has been deployed
+# here is one way to do that
+namespace :passenger do
+  desc "Restart Application"
+  task :restart do
+    run "touch #{current_path}/tmp/restart.txt"
+  end
+end
+
+# this is what calls the two above tasks
+after :deploy, "passenger:restart", :update_config
+
+pre.
+
+After copying the above into the config/deploy.rb file, make sure you read over it, and make any necessary changes.
+
+Once that is done, let's tell Capistrano to set up.  What this will do is create a folder structure on your production server.
+
+On the local machine, from your project, do this:
+
+bq. cap deploy:setup
+
+NOTE: the "deploy" command above does not refer to the user you created on the production server, it is a Capistrano command.
+To see all commands available, type "cap -T"
+
+OK - Let's log into the production server and make sure that Capistrano did something...
+
+bq. ssh deploy@domain_or_ip_of_your_server
+cd /var/www/apps
+ls
+
+You should see a directory for your project here.  Let's see what's inside:
+
+bq. cd rollout_tutorial
+ls
+
+You should see two directories: releases and shared.
+
+Let's move on.  Let's do a check from our local machine to make sure Capistrano thinks everything is OK:
+
+bq. cap deploy:check
+
+You should now see "You appear to have all necessary dependencies installed."  Great!  (If not, you should have some tips what to fix, but if you are not sure - make sure you have followed all the steps in this tutorial).
+
+We have not rolled out the code yet.  So let's do that now.  From the local machine, do this:
+
+bq. cap deploy:cold
+
+Look through what Capistrano output, you may see some errors.  If you do, you need to address these.  For example, if you followed this tutorial exactly, you are likely to see a rake not found error.  So let's fix that.  Log into the production server as root:
+
+bq. ssh root@domain_or_ip_of_your_server
+
+Remember, you should be root - if not, you'll need to permission deploy user to write to the REE bin and lib directories.
+Now, check if rake is installed, and install it if needed.  You should also check that each of the following are installed - and install them if you think they are needed: rake, irb, ruby (since this is for production, you likley only want to add rake).
+
+On your production server:
+
+bq. gem list
+gem install rake
+
+Remember, this rake gem is installed in the REE folder.  Always pay attention to which gems your are using and where they are stored, especially if you installed Ruby - and now have to version of it (regular Ruby and REE).  If you have both version, you may want to create useful symlinks.
+
+Here is a useful symlink (that we need for this tutorial since there is no other rake installed... and Capistrano will call the rake command).
+
+You should do this as root, just in case.  On your production server:
+
+bq. ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/rake /usr/bin/rake
+
+Finally, from the local machine, let's try Capistrano deployment again:
+
+bq. cap deploy:cold
+
+Still getting errors?  This is where it get's tricky.  You may need to google these problems.
+
+Here are the additional steps I needed to do to get it all working:
+
+* In config/environments/production.rb, comment out: config.action_view.cache_template_loading = true
 
 h3. Deployment Recipe
 
