@@ -295,15 +295,12 @@ bq. ruby-enterprise-1.8.6-20090610/installer
 
 * Just go with all the defaults, unless you have a good reason for using something else.
 
-When done, the installer will prompt you with a command to install some database gems.  I am using MySQL, so will only install that one.  You will also be told how to install Passenger, and this we will also do.
-
-h4. MySQL gem
-
-bq. /opt/ruby-enterprise-1.8.6-20090610/bin/ruby /opt/ruby-enterprise-1.8.6-20090610/bin/gem install mysql
-
+When done, the installer will prompt you with a command to install some database gems.  I am using MySQL, so will only install that one.  You will also be told how to install Passenger, and this we will also do.  If you followed the steps above, you don't need to worry about these as you only need the mysql gem (which has been installed).
 
 
 h3. Passenger (and Apache)
+
+REE told us to install Passenger, so let's do that now:
 
 bq. /opt/ruby-enterprise-1.8.6-20090610/bin/passenger-install-apache2-module
 
@@ -328,10 +325,11 @@ bq. LoadModule passenger_module /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gem
 PassengerRoot /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gems/1.8/gems/passenger-2.2.4
 PassengerRuby /opt/ruby-enterprise-1.8.6-20090610/bin/ruby
 
-
 Before, we do that - let's make ourselves happy and make sure our webserver is up and running!  Go into your browser and enter your IP or domain name (unless you have done some DNS set up already - not in scope of this tutorial - then just use the IP).
 
 You should see "It works!" in the browser.  If you do not see this, then something went wrong.  Go back and check that you have followed this section correctly.  You may need to consult your host's guide.
+
+You probably also saw a note on VirtualHosts.  You can ignore this for now, we'll get to it later.
 
 Let's move on.  We need to add those lines to the Appache config file.  So, let's do that. The configuration file should be here: /etc/apache2/apache2.conf.  Open this file (I will use nano as the editor, you can use whatever you like):
 
@@ -342,6 +340,7 @@ Copy and paste these lines to the top of the file, save it, and close.
 pre. LoadModule passenger_module /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gems/1.8/gems/passenger-2.2.4/ext/apache2/mod_passenger.so
 PassengerRoot /opt/ruby-enterprise-1.8.6-20090610/lib/ruby/gems/1.8/gems/passenger-2.2.4
 PassengerRuby /opt/ruby-enterprise-1.8.6-20090610/bin/ruby
+
 
 h3. "gem"
 
@@ -365,9 +364,17 @@ You should see all the gems installed, and can use it just like a regular gem co
 
 bq. gem install rails --version=2.2.2
 
+h3. rsync
+
+We will make use of rsync with Capistrano (don't HAVE TO, but will).  So let's install that while here.
+(if you don't have this on your local machine, install it there too).
+
+bq. apt-get install rsync
+
 
 h3. Create the database
 
+OK, everything looks good.
 Let's log into mysql and create the database we need for our application.
 
 bq. mysql -u root -p
@@ -396,13 +403,6 @@ bq. production:
       password: password
       host: YOUR SERVER DOMAIN OR IP ADDRESS HERE
 
-
-h3. rsync
-
-We will make use of rsync with Capistrano (don't HAVE TO, but will).  So let's install that while here.
-(if you don't have this on your local machine, install it there too).
-
-bq. apt-get install rsync
 
 Our server is ready (for now)!
 
@@ -494,7 +494,7 @@ Type "yes" when prompted.  Now you should see a message saying you have been suc
 
 For security reason, let's make sure no one else can edit the .ssh directory.  Do this on the production server:
 
-bq. chmod 700 .ssh
+bq. chmod 700 ~/.ssh
 
 
 h3. Use SSH key to log into your production server
@@ -563,7 +563,7 @@ set :use_sudo, false
 ssh_options[:paranoid] = false 
 
 # address of the production server, not that this is a variable
-set :domain, "IP or domain name of production server"
+set :domain, "74.207.226.249" #"IP or domain name of production server"
 
 # the above variable is used here.
 # however, you can write these out - and may need to if you set up your environment
@@ -599,28 +599,44 @@ set :scm_command, "/usr/bin/git"
 # TASKS #####################################################
 
 # there are some things we'll want to do after the basic deployment has completed
-# do do those things, we will create the tasks, and then call them in the end
+# to do those things, we will create the tasks, and then call them in the end
 
 # until this point, all the code that has been deployed, matches what you have in the (Github) repository
 # since we excluded the config directory from our Git versioning (in order to not display or details publically on Github)
 # we need to copy the files over to the production server
 
-#	Here is a task that will copy this over fromt he local machine to the production server
-task :update_config, :roles => [:app] do
-  run "cp -Rf #{shared_path}/config* #{release_path}/config"
-end
+namespace :deploy do
+  
+  desc "Sync the config directory"
+  task :sync_config do
+    # this will sync the config file on your local machine with that on your production server
+    # notice that the domain variable is used (this should be the ip or domain of your app)
+    # we set this variable way on top
+    # also note that this puts it in the shared folder, the symlink task below will like it from the release folder
+    
+    # make sure you install rsync on the server
+    system "rsync -vr --exclude='*~' config #{user}@#{domain}:#{shared_path}/"
 
-#	Since we are dealing with Passenger, we need to restart it after everything has been deployed
-# here is one way to do that
-namespace :passenger do
-  desc "Restart Application"
-  task :restart do
-    run "touch #{current_path}/tmp/restart.txt"
+    # we'll need the tmp file to restart Passenger (see below)
+    system "rsync -vr --exclude='*~' tmp #{user}@#{domain}:#{shared_path}/"
+
   end
+
+  desc "Symlink shared config folder on each release."
+  task :symlink_shared do
+    # creates symlink for the config folder
+    run "ln -nfs #{shared_path}/config #{release_path}/config"
+  end
+  
+  desc "Tell Passenger to restart the app."
+  task :restart do
+    run "touch #{shared_path}/tmp/restart.txt"
+  end
+
 end
 
-# this is what calls the two above tasks
-after :deploy, "passenger:restart", :update_config
+ after 'deploy:update_code', 'deploy:sync_config', 'deploy:symlink_shared', 'deploy:restart'
+
 
 pre.
 
@@ -674,9 +690,12 @@ Remember, this rake gem is installed in the REE folder.  Always pay attention to
 
 Here is a useful symlink (that we need for this tutorial since there is no other rake installed... and Capistrano will call the rake command).
 
-You should do this as root, just in case.  On your production server:
+You should do this as root, just in case.  On your production server (we did this for gem earlier):
 
 bq. ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/rake /usr/bin/rake
+ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/irb /usr/bin/irb
+ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/rails /usr/bin/rails
+ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/ruby /usr/bin/ruby
 
 Finally, from the local machine, let's try Capistrano deployment again:
 
@@ -688,10 +707,7 @@ Here are the additional steps I needed to do to get it all working:
 
 * In config/environments/production.rb, comment out: config.action_view.cache_template_loading = true
 
-h3. Deployment Recipe
-
-TBD
-
+To be continued.....
 
 h2. Useful Links
 
