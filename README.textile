@@ -766,7 +766,7 @@ h4. Updates not requiring a database migration
 
 Let's do a minor update to our aplication.  On your local (development) machine, open the app/views/things/index.html.erb file.
 
-Change the title to "Many Many Things"
+Change the title to "Lots of Things"
 
 After saving, let's check out git status.
 
@@ -777,7 +777,6 @@ You should see "modified:   app/views/things/index.html.erb"
 Great, let's commit this change:
 
 bq. git commit -a -m "changes title of things index page"
-git push origin master
 cap deploy
 
 
