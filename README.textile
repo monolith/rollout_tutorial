@@ -758,6 +758,29 @@ Now go back to the browser and refresh.
 The application should now be there and work.  Congradulations, you made it!
 
 
+h3. Further updates
+
+You will need to learn a lot more about Git, Github, Capistrano, etc.  But let's do a couple of quick changes just to get comfortable.
+
+h4. Updates not requiring a database migration
+
+Let's do a minor update to our aplication.  On your local (development) machine, open the app/views/things/index.html.erb file.
+
+Change the title to "Many Many Things"
+
+After saving, let's check out git status.
+
+bq. git status
+
+You should see "modified:   app/views/things/index.html.erb"
+
+Great, let's commit this change:
+
+bq. git commit -a -m "changes title of things index page"
+git push origin master
+cap deploy
+
+
 h2. Useful Links
 
 h3. Git
