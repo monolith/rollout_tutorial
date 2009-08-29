@@ -1,37 +1,36 @@
 h1. Setup Tutorial for a Rails application with Git / Github / Capistrano / Ruby Enterprise / Passenger
 
-This tutorial will show you how to rollout a basic Rails application using Git and Capistrano.  We will do this while leveraging Github, and - on the production server - Ruby Enterprise Edition and Passenger.  The database will be MySQL.  We will also be using Ubuntu as the OS.
+This tutorial will show you how to rollout a basic Rails application using Git and Capistrano.  We will do this while leveraging Github, and - on the production server - Ruby Enterprise Edition and Passenger.  The database will be MySQL.  We will be using Ubuntu as the OS.
 
-We will be doing all of this from scratch.  I recommend you follow from scratch as well, unless you know what you're doing (in which case, jump in whereever you like).
+I will walk you through from scratch.  I recommend you follow from scratch as well, unless you know what you're doing (in which case, jump in whereever you like but be prepare for potentially unexpected behavior).
 
-NOTE: This tutorial will NOT intended to teach you Rails, Git, Capistrano, etc.  While we will cover everything, we touch on these things at a high level - with just enough information to get you to set everything up and get you going.  However, you will benefit greatly by looking at each one of these things in more detail.  Links at the bottom will help you get started on learning the details.
+This tutorial will NOT teach you Rails, Git, Capistrano, etc.  While it will cover the basics, it will be just enough information to get you up and running.  However, you will benefit greatly by looking at each one of these things in more detail.  Links at the bottom will help you get started on learning the details.
 
 
 h2. Prerequisites
 
 * Ruby installation on your local machine
-* Rails installation (LAMP) on your local machine
+* Rails installation on your local machine
 * MySQL installation on your local machine
 * Clean server for production (with nothing but the initial OS setup)
 
-It will be helpful if you are already comfortable with basic Rails programming.  If not, then some of this may not make sense (but it should still work).
+It will be nice if you are already comfortable with basic Rails programming.  If not, then some of this may not make sense (but it should still work).
 
 
 h3. My set up
 
-NOTE: If you use a different setup, you may have slightly different commands.  There will not be many (if any) OS-specific commands used on my local machine (development), so it will be more useful to you to have match the production machine.  I have not tried this with Ubuntu 8.10 or 9.04 in production, but I imagine the differences will be minor.
+NOTE: If you use a different setup, you may have slightly different commands / results.  There will not be many (if any) OS-specific commands used on my local machine (development), so it will be more useful to you to match the production machine.  I have not tried this with Ubuntu 8.10 or 9.04 in production, but I imagine the differences will be minor.
 
 * Rails version: 2.2.2
 * OS: Ubuntu 8.10 (development), Ubuntu 8.04 (production)
-* Db: MySQL
+* Db: MySQL Ver 14.12 Distrib 5.0.51a, for debian-linux-gnu (i486) using readline 5.2
 * Capistrano v2.5.8
 * Git version 1.5.6.3
 
 
-
 h2. Create a new Rails project
 
-Here I will create an initial Rails project on my local development machine, and ensure it works.  Of course, you can do this with any Rails project, but this is the one I will use for this tutorial.
+Let's create an initial Rails project on the local development machine, and ensure it works.  Of course, you can do this with any Rails project, but this is the one I will use for this tutorial.
 
 Create project:
 
@@ -62,14 +61,18 @@ bq. create database rollout_tutorial_development;
 
 Exit the database and let's update the project's database config file.  Open config/database.yml
 
-bq. development:
+pre..
+
+ development:
       adapter: mysql
       database: rollout_tutorial_development
       username: root
       password:
       host: localhost
 
-NOTE: You may need to change the username and password.
+pre.
+
+NOTE: You may need to change the username and password (depending on your local set up).
 
 Now let's create a small application.  All this application will do is allow people to enter items into the database and see what has been entered.  I will use nifty_generators, see below Useful Links section for a link on how to install this if you do not have it.
 
@@ -83,7 +86,7 @@ bq. rake db:migrate
 
 Update config/routes.rb, and add the following line
 
-bq. map.connect '', :controller => 'things'
+pre. map.connect '', :controller => 'things'
 
 And then this:
 
@@ -109,14 +112,16 @@ Now, let's initiate version control for our project.
 
 bq. git init
 
-You should now see .git (hidden) directory in your project.
+You should now see .git (hidden) directory in your project (ls -a to see hidden stuff).
 
-Before we go on, let's tell git to ignore tracking certain files.  We want to do this because we don't want to track temporry files (ending with ~ on Ubuntu), log files, and some sensitive files, such as those in the config directory.  Up to you what files and directories to ignore, this example just shows the capability.  Read up more on Git to learn how to use it better.  If you're hosting your code on Github (for free), others will be able to see your files, which is why you will want to ignore some senstive files.
+Before we go on, let's tell git to ignore tracking certain files.  We want to do this because we don't want to track temporary files (ending with ~ on Ubuntu), log files, and some sensitive files such as those in the config directory.  Up to you what files and directories to ignore, this example just shows the capability.  Read up more on Git to learn how to use it better.  If you're hosting your code on Github (for free), others will be able to see your files, which is why you will want to ignore some senstive files.
 
 Create a .gitignore file in the project root.
 In the file, specify what should be ignored, here is what I used:
 
-pre. *.log
+pre..
+
+ *.log
 db/schema.rb
 db/schema.sql
 db/sphinx/*
@@ -124,7 +129,9 @@ db/sphinx/*
 tmp/*
 config/*
 
-Now, let's add all file first version of the project (you need the "." there)
+pre.
+
+Now, let's add files for our first version of the project (you need the "." there)
 
 bq. git add .
 
@@ -153,7 +160,7 @@ Once your account is set up, you need to take a few steps in order to use it.
 * Click on account and ensure the email address you used here is the same one you will want to use with git locally (will do this shortly as well).
 
 We need to add an SSH key.  Assuming you have not done this yet, here are the steps.
-On your local machine (you may need to install SSH first):
+On your local machine (you may need to install SSH first... sudo apt-get install ssh):
 
 bq. ssh-keygen
 
@@ -170,14 +177,16 @@ That should show you the public SSH key.  Copy this, and go to your Github accou
 
 h3. Creating a Github repository
 
+While logged into Github, head for the Dashboard page.
+
 * Click on dashboard
 * Click on create a new one
 * Name your project the same name as our Rails project "rollout_tutorial"
 * Click on create repository
 
-You should now see a setup page.  Most of these things we can ignore.
+You should now see a setup page.  Most of these things you can ignore (if you're following this tutorial step by step).
 
-Here is what you need for now:
+Here is what you need for now (copy and paste from the Github page, or change the name and email below):
 
 bq. git config --global user.name "name"
     git config --global user.email email
@@ -192,22 +201,26 @@ If successful, you will see a message telling you that you have been authenticat
 
 Works?  Let's move on.
 
-We have already create a rails application and used git to save it.  So all we need to do now are the following lines (replace my username with yours in the first line):
+We have already create a Rails application and used git to save it.  So all we need to do now are the following lines (replace username with yours in the first line):
 
-bq. git remote add origin git@github.com:monolith/rollout_tutorial.git
+bq. git remote add origin git@github.com:USERNAME/rollout_tutorial.git
     git push origin master
     
-Go back to the Github project page and click on Continue (or refresh on your project).
+Go back to the Github project page and click on Continue (or refresh).
 
 You should now see the code there!  And some details on when you last saved the changes.
 
 h3. Just to be sure...
 
-Let's make an update to one of your files.  On your local machine, open the README file in the rollout_tutorial directory, and change it.  For example, at the following line at the top:
+Let's make an update to one of the files.  On your local machine, open the README file in the rollout_tutorial directory, and change it.  For example, add the following line at the top:
 
 pre. Hello world
 
 Save the file.
+
+Do this, and you will see that Git noticed the update:
+
+bq. git status
 
 You will need to learn how to use Git to learn how to use version control, add and remove files, etc.  But that is not the purpose of this tutorial.  So, since we just updated the README file, let's make sure we can send that change to Github.  Here's how to do that.
 
@@ -226,7 +239,7 @@ Worked?  Then, this part is done.
 
 h2. Production server
 
-I am doing the following on a fresh install of Ubuntu 8.04 LTS, I am using a VPS hosted on Linode.com
+I am doing the following on a fresh install of Ubuntu 8.04 LTS, I am using a VPS hosted on Linode.com (the company you host with should not matter as long as you have full root access).
 
 h3. General setup
 
@@ -236,7 +249,7 @@ bq. ssh root@domain_or_ip_of_your_server
 
 Say "yes" add add this domain/server to your known hosts (you won't have to do this again).  Enter your password, and you should be in your server.
 
-Update the OS (for security reasons)
+Update the OS (for security reasons):
 
 bq. apt-get update
 
@@ -248,7 +261,7 @@ If you exit and reconnect, you will see root@myservername... this will help remi
 
 h3. Install MySQL
 
-This may seem a little early, but we need to do this before installing Ruby Enterprise.  Otherwise, you may run into a problem installing mysql gem.
+This may seem a little early, but we need to do this before installing Ruby Enterprise.  Otherwise, you may run into a problem installing mysql gem.  If you plan using another database, install it now anyway.
 
 bq. apt-get install mysql-server
 
@@ -259,17 +272,17 @@ bq. apt-get install libmysql++-dev
 
 h3. Ruby Enterprise Edition
 
-OK, let's install Ruby Enterprise.  This is a fork of the Ruby language that will run your code faster (the claim is 33% faster on average).  Since, this is indeed Ruby, we don't need to install the standard Ruby library.
+OK, let's install REE.  This is a fork of the Ruby language that will run your code faster (the claim is 33% faster on average).  Since, this is indeed Ruby, we don't need to install the standard Ruby library (if you do, install the standard Ruby library, you will need to modify somethings in this tutorial).
 
-Enterprise will install a bunch of things for you, this is why were are doing this now.
+REE will install a bunch of things for you, this is why were are doing this now.
 
-Download Ruby Enterprise (see their website, link below).  In this exmaple, I am using the current version as of August 23, 2009.  You may see a different version, and need to modify the below as needed.
+Download Ruby Enterprise Edition (see their website, link below).  In this exmaple, I am using the current version as of August 23, 2009.  You may see a different version, and need to modify the below as needed.
 
 I will do the download with wget.  So first, let's install wget.
 
 bq. apt-get install wget
 
-Now download REE and install it.
+Now download REE:
 
 bq. wget http://rubyforge.org/frs/download.php/58677/ruby-enterprise-1.8.6-20090610.tar.gz
 
@@ -289,7 +302,7 @@ apt-get install zlib1g-dev
 apt-get install libssl-dev
 apt-get install libreadline5-dev
 
-If you get the message telling you install these things (or others), do it.  And then, do this again:
+If you get the message telling you to install these things (or others), do it.  And then, do this again:
 
 bq. ruby-enterprise-1.8.6-20090610/installer
 
@@ -327,7 +340,7 @@ PassengerRuby /opt/ruby-enterprise-1.8.6-20090610/bin/ruby
 
 Before, we do that - let's make ourselves happy and make sure our webserver is up and running!  Go into your browser and enter your IP or domain name (unless you have done some DNS set up already - not in scope of this tutorial - then just use the IP).
 
-You should see "It works!" in the browser.  If you do not see this, then something went wrong.  Go back and check that you have followed this section correctly.  You may need to consult your host's guide.
+You should see "It works!" in the browser.  If you do not see this, then something went wrong.  Go back and check that you have followed this section correctly.  You may need to consult your host's user guides.
 
 You probably also saw a note on VirtualHosts.  You can ignore this for now, we'll get to it later.
 
@@ -347,12 +360,12 @@ h3. "gem"
 What gems do I have?  If you try "gem list" you will see a command not found.  This is because we didn't install the regular gem package, because we didn't install standard Ruby (we installed Ruby Enterprise fork, remember?)
 
 So, if you do this:
-NOTE: Your REE version may be different - make sure you use the right directory, so you may need to modify the below line.
+NOTE: Your REE version may be different - make sure you use the right directory, (you may need to modify the below line).
 
 bq. /opt/ruby-enterprise-1.8.6-20090610/bin/gem list
 
 You should see the list of installed gems.  Remembering/typing this entire line is not fun.  So let's create a symlink.  Here, the symlink will use "gem" (the last thing in the below line) to refer to the location of the gem.  If you already had Ruby and gems installed, you may want to use a different name (i.e. "reegem").
-NOTE: Your REE version may be different - make sure you use the right directory, so you may need to modify the below line.
+NOTE: Your REE version may be different - make sure you use the right directory (you may need to modify the below line).
 
 bq. ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/gem /usr/bin/gem
 
@@ -394,7 +407,7 @@ bq. mysql -u tutorial_db_user -p
 
 h4. Update the application configuration
 
-Now that we have done this, let's go back to our config/database.yml file and update the production configuration there:
+Now that we have done this, let's go back to our config/database.yml file on the develpment machine and update the production configuration there:
 
 bq. production:
       adapter: mysql
@@ -415,7 +428,7 @@ OK, at this point this is what we have done:
 * Set up Github to host or remote repository
 * Set up our production server
 
-The next thing we need to do is set up capistrano, to automate our application rollout to production.
+The next thing we need to do is set up Capistrano, to automate our deployment to production.
 
 h3. Create deploy user on the server
 
@@ -465,7 +478,7 @@ bq. git config --global user.name "name"
     git config --global user.email email
     
 
-OK, one more thing to do before moving on to Capistrano itself.  Capistrano will need to get into Github from our production server, because that is where our main git repository is stored.  We need to do a couple of things to set this up - mainly setting up SSH keys.  We can copy the key from our local machine, but let's keep those separate and just generate a new key to identify the deploy user.
+OK, one more thing to do before moving on to Capistrano itself.  Capistrano will need to get into Github from our production server, because that is where our main git repository is stored.  We need to do a couple of things to set this up - mainly setting up SSH keys.
 
 NOTE: if ssh does not work, you need to install it with: apt-get install ssh
 
@@ -481,7 +494,7 @@ Copy the key, and add it to you Github account.  The generated key can be found 
 
 cat ~/.ssh/id_rsa.pub
 
-Copy that, the go to your Github account.  Ckick on account, and then click on add another key (under SSH public keys), and add the key.
+Copy that, then go to your Github account.  Ckick on account, and then click on add another key (under SSH public keys), and add the key.
 
 Let's see if that worked.
 
@@ -521,7 +534,7 @@ There is nothing to install on the production server.  So, let's move on.
 
 h3. Capistrano Setup
   
-Let's enable Capistrano.  On your local machine, while in your project do this (including the ".")
+Let's enable Capistrano for this project.  On your local machine, while in your project do this (including the ".")
 
 bq. capify .
 
@@ -536,9 +549,6 @@ role :web, "your web-server here"
 Plus some other things.  Change the file so that it looks like this:
 
 pre.. 
-
-
-
 #############################################################
 #	APPLICATION DETAILS #######################################
 
@@ -626,7 +636,6 @@ namespace :deploy do
     system "rsync -vr --exclude='*~' db #{user}@#{domain}:#{release_path}/"
 
   end
-
   
   desc "Tell Passenger to restart the app."
   task :restart do
@@ -646,8 +655,8 @@ end
 
  after 'deploy:update_code', 'deploy:sync_config', 'deploy:restart'
  
-
 pre.
+
 
 After copying the above into the config/deploy.rb file, make sure you read over it, and make any necessary changes.
 
@@ -695,11 +704,11 @@ On your production server:
 bq. gem list
 gem install rake
 
-Remember, this rake gem is installed in the REE folder.  Always pay attention to which gems your are using and where they are stored, especially if you installed Ruby - and now have to version of it (regular Ruby and REE).  If you have both version, you may want to create useful symlinks.
+Remember, this rake gem is installed in the REE folder.  Always pay attention to which gems your are using and where they are stored, especially if you installed Ruby - and now have to version of it (regular Ruby and REE).  If you have both versions, you may want to create useful symlinks.
 
 Here is a useful symlink (that we need for this tutorial since there is no other rake installed... and Capistrano will call the rake command).
 
-You should do this as root, just in case.  On your production server (we did this for gem earlier):
+You should do this as root, just in case.  On your production server (we did this for gem earlier if your remember):
 
 bq. ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/rake /usr/bin/rake
 ln -s /opt/ruby-enterprise-1.8.6-20090610/bin/irb /usr/bin/irb
@@ -712,11 +721,12 @@ bq. cap deploy:cold
 
 Still getting errors?  This is where it get's tricky.  You may need to google these problems.
 
-Here are the additional steps I needed to do to get it all working:
+Here are the additional steps you may needed to do to get it all working:
 
 * In config/environments/production.rb, comment out: config.action_view.cache_template_loading = true
 * You may be missing gems on the production server.  To fix that, either install them or freeze them in your project.  The recommended solution is to freeze them (on your local machine, inside your project do this: freeze gems.  This will freeze them into your vendor directory).
 * If you initially created with a rails version > 2.2.2, and you then changed it to 2.2.2 in the environment settings, then you need to rename application_controller.rb to application.rb (and then make sure it's included in the git repository).
+* Remember to commit any changes you make with git.
 * Look over the deployment recipe above, you may need to modify it.
 
 
@@ -748,7 +758,7 @@ NameVirtualHost *
 
 pre.
 
-Note that the DocumentRoot is now pointing to you application/current/public direcory.
+Note that the DocumentRoot is now pointing to you application/current/public directory.
 
 After saving this, we need to restart Appache:
 
@@ -859,13 +869,15 @@ cap deploy:migrations
 
 Notice that we used deploy:migrations here.  Check your production website now.. it should be updated!
 
-There is still much more to learn.  On your development machine:
+On your development machine:
 
 bq. cap -T
+cap --help
+git --help
 
-This will give you some ideas.
+This should give you some ideas.
 
-Now, you're on your own.  There is so much more to learn.  Hopefully this was helpful in getting that started!
+But this tutorial has come to an end.  There is so much more to learn.  Hopefully this was helpful in getting that started!
 
 h2. Useful Links
 
