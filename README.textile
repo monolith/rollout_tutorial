@@ -720,6 +720,7 @@ Here are the additional steps I needed to do to get it all working:
 * Look over the deployment recipe above, you may need to modify it.
 
 
+
 h4. Virtual Host
 
 OK, once everything deployed with no errors, let's check out the website.  Go to your domain in the browser.
@@ -777,12 +778,82 @@ You should see "modified:   app/views/things/index.html.erb"
 Great, let's commit this change:
 
 bq. git commit -a -m "changes title of things index page"
+git push origin master
 cap deploy
 
+That should have worked!  Both Github and your production server should be updated... and if you refresh your browser, you should see the change!
+
+h4. Migrations
+
+Let's make a change that requires a migration.  On your development machine:
+
+bq.  script/generate migration addDescription
+
+Open the file, and and save it with this:
+
+pre..
+
+class AddDescription < ActiveRecord::Migration
+  def self.up
+    add_column :things, :description, :string
+  end
+
+  def self.down
+    add_column :things, :description, :string
+  end
+end
+
+pre.
+
+
+And let's update app/views/things/_form.html.erb by adding the description fields.  This file should now look like:
+
+pre..
+
+<% form_for @thing do |f| %>
+  <%= f.error_messages %>
+  <p>
+    <%= f.label :title %><br />
+    <%= f.text_field :title %>
+  </p>
+
+  <p>
+    <%= f.label :description %><br />
+    <%= f.text_field :description %>
+  </p>
+
+  <p><%= f.submit "Submit" %></p>
+<% end %>
+
+pre.
+
+And update the index page to show description.  app/views/things/index.html.erb
+
+pre..
+
+<% title "Lots of Things" %>
+
+<table>
+  <tr>
+    <th>Title</th>
+  </tr>
+  <% for thing in @things %>
+    <tr>
+      <td><%=h thing.title %></td>
+      <td> Desc: <%=h thing.description %></td>
+      <td><%= link_to "Edit", edit_thing_path(thing) %></td>
+    </tr>
+  <% end %>
+</table>
+
+<p><%= link_to "New Thing", new_thing_path %></p>
+
+pre.
 
 h2. Useful Links
 
 h3. Git
+
 "http://git-scm.com/":http://git-scm.com/
 "http://www-cs-students.stanford.edu/~blynn/gitmagic/":http://www-cs-students.stanford.edu/~blynn/gitmagic/
 
