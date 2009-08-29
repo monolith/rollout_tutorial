@@ -61,9 +61,7 @@ bq. create database rollout_tutorial_development;
 
 Exit the database and let's update the project's database config file.  Open config/database.yml
 
-pre..
-
- development:
+pre.. development:
       adapter: mysql
       database: rollout_tutorial_development
       username: root
@@ -119,9 +117,7 @@ Before we go on, let's tell git to ignore tracking certain files.  We want to do
 Create a .gitignore file in the project root.
 In the file, specify what should be ignored, here is what I used:
 
-pre..
-
- *.log
+pre.. *.log
 db/schema.rb
 db/schema.sql
 db/sphinx/*
@@ -548,8 +544,7 @@ role :web, "your web-server here"
 
 Plus some other things.  Change the file so that it looks like this:
 
-pre.. 
-#############################################################
+pre.. #############################################################
 #	APPLICATION DETAILS #######################################
 
 # name of the application
@@ -747,9 +742,7 @@ There is a lot more to this that you should really learn.  But, for purposes of 
 
 Modify the file so that it only has the following:
 
-pre..
-
-NameVirtualHost *
+pre.. NameVirtualHost *
 
 <VirtualHost *>
         DocumentRoot /var/www/apps/rollout_tutorial/current/public
@@ -801,9 +794,7 @@ bq.  script/generate migration addDescription
 
 Open the file, and and save it with this:
 
-pre..
-
-class AddDescription < ActiveRecord::Migration
+pre.. class AddDescription < ActiveRecord::Migration
   def self.up
     add_column :things, :description, :string
   end
@@ -818,9 +809,7 @@ pre.
 
 And let's update app/views/things/_form.html.erb by adding the description fields.  This file should now look like:
 
-pre..
-
-<% form_for @thing do |f| %>
+pre.. <% form_for @thing do |f| %>
   <%= f.error_messages %>
   <p>
     <%= f.label :title %><br />
@@ -839,9 +828,7 @@ pre.
 
 And update the index page to show description.  app/views/things/index.html.erb
 
-pre..
-
-<% title "Lots of Things" %>
+pre.. <% title "Lots of Things" %>
 
 <table>
   <tr>
