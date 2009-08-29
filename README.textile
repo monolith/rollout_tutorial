@@ -713,7 +713,8 @@ Here are the additional steps you may needed to do to get it all working:
 * Remember to commit any changes you make with git.
 * Look over the deployment recipe above, you may need to modify it.
 
-
+ 
+  
 
 h4. Virtual Host
 
