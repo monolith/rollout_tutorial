@@ -68,9 +68,7 @@ pre.. development:
       password:
       host: localhost
 
-pre.
-
-NOTE: You may need to change the username and password (depending on your local set up).
+p. NOTE: You may need to change the username and password (depending on your local set up).
 
 Now let's create a small application.  All this application will do is allow people to enter items into the database and see what has been entered.  I will use nifty_generators, see below Useful Links section for a link on how to install this if you do not have it.
 
@@ -125,9 +123,7 @@ db/sphinx/*
 tmp/*
 config/*
 
-pre.
-
-Now, let's add files for our first version of the project (you need the "." there)
+p. Now, let's add files for our first version of the project (you need the "." there)
 
 bq. git add .
 
@@ -650,10 +646,8 @@ end
 
  after 'deploy:update_code', 'deploy:sync_config', 'deploy:restart'
  
-pre.
-
-
-After copying the above into the config/deploy.rb file, make sure you read over it, and make any necessary changes.
+ 
+p. After copying the above into the config/deploy.rb file, make sure you read over it, and make any necessary changes.
 
 Once that is done, let's tell Capistrano to set up.  What this will do is create a folder structure on your production server.
 
@@ -749,9 +743,7 @@ pre.. NameVirtualHost *
         ErrorLog /var/log/apache2/error.log
 </VirtualHost>
 
-pre.
-
-Note that the DocumentRoot is now pointing to you application/current/public directory.
+p. Note that the DocumentRoot is now pointing to you application/current/public directory.
 
 After saving this, we need to restart Appache:
 
@@ -804,10 +796,7 @@ pre.. class AddDescription < ActiveRecord::Migration
   end
 end
 
-pre.
-
-
-And let's update app/views/things/_form.html.erb by adding the description fields.  This file should now look like:
+p. And let's update app/views/things/_form.html.erb by adding the description fields.  This file should now look like:
 
 pre.. <% form_for @thing do |f| %>
   <%= f.error_messages %>
@@ -824,9 +813,7 @@ pre.. <% form_for @thing do |f| %>
   <p><%= f.submit "Submit" %></p>
 <% end %>
 
-pre.
-
-And update the index page to show description.  app/views/things/index.html.erb
+p. And update the index page to show description.  app/views/things/index.html.erb
 
 pre.. <% title "Lots of Things" %>
 
@@ -845,9 +832,7 @@ pre.. <% title "Lots of Things" %>
 
 <p><%= link_to "New Thing", new_thing_path %></p>
 
-pre.
-
-Now, do this:
+p. Now, do this:
 
 bq. git commit -a -m "added description to things"
 git push origin master
