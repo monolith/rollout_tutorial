@@ -888,5 +888,12 @@ h3. Other useful links
 
 h4. Nifty generators (used in the tutorial app)
 
-"http://github.com/ryanb/nifty-generators/tree/master":http://github.com/ryanb/nifty-generators/tree/master
+"http://github.com/ryanb/nifty-generators/":http://github.com/ryanb/nifty-generators/
 
+h4. VirtualHost setup with Apache
+
+"http://www.debian-administration.org/articles/412":http://www.debian-administration.org/articles/412
+
+"http://httpd.apache.org/docs/2.2/vhosts/examples.html":http://httpd.apache.org/docs/2.2/vhosts/examples.html
+
+"http://httpd.apache.org/docs/":http://httpd.apache.org/docs/
