@@ -850,6 +850,23 @@ pre..
 
 pre.
 
+Now, do this:
+
+bq. git commit -a -m "added description to things"
+git push origin master
+cap deploy:migrations
+
+
+Notice that we used deploy:migrations here.  Check your production website now.. it should be updated!
+
+There is still much more to learn.  On your development machine:
+
+bq. cap -T
+
+This will give you some ideas.
+
+Now, you're on your own.  There is so much more to learn.  Hopefully this was helpful in getting that started!
+
 h2. Useful Links
 
 h3. Git
