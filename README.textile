@@ -540,8 +540,7 @@ role :web, "your web-server here"
 
 Plus some other things.  Change the file so that it looks like this:
 
-pre.. #############################################################
-#	APPLICATION DETAILS #######################################
+pre.. #	APPLICATION DETAILS #######################################
 
 # name of the application
 set :application, "rollout_tutorial" # this will be used to create the folder structure (see line)
@@ -550,7 +549,6 @@ set :deploy_to, "/var/www/apps/#{application}"
 # Since this will rollout our code to the production server, state so explicitely:
 #set :rails_env, "production"
 
-#############################################################
 #	GETTING INTO THE PRODUCTION SERVER ########################
 
 # username of the user underwhich capistrano will log in,
@@ -574,7 +572,6 @@ role :app, domain
 role :web, domain
 role :db, domain, :primary => true
 
-#############################################################
 #	GIT AND GITHUB ############################################
 
 # tell Capistrano that our version control is done with Git
@@ -596,7 +593,6 @@ set :deploy_via, :remote_cache
 set :scm_command, "/usr/bin/git"
 
 
-#############################################################
 # TASKS #####################################################
 
 # there are some things we'll want to do after the basic deployment has completed
@@ -640,13 +636,12 @@ namespace :deploy do
   deploy.task :start do
      # nothing
    end
-
-
 end
 
- after 'deploy:update_code', 'deploy:sync_config', 'deploy:restart'
- 
- 
+after 'deploy:update_code', 'deploy:sync_config', 'deploy:restart'
+
+
+
 p. After copying the above into the config/deploy.rb file, make sure you read over it, and make any necessary changes.
 
 Once that is done, let's tell Capistrano to set up.  What this will do is create a folder structure on your production server.
