@@ -9,6 +9,7 @@ This tutorial will NOT teach you Rails, Git, Capistrano, etc.  While it will cov
 
 h2. Prerequisites
 
+
 * Ruby installation on your local machine
 * Rails installation on your local machine
 * MySQL installation on your local machine
